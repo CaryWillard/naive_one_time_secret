@@ -45,7 +45,7 @@ impl Repo {
         Ok(result)
     }
 
-    pub fn store_secret(&self, new_secret: InsertableSecret) -> Result<(), error::Error> {
+    pub fn store_secret(&self, new_secret: &InsertableSecret) -> Result<(), error::Error> {
         insert_into(secrets::table)
             .values(new_secret)
             .execute(&self.connection)?;
@@ -81,6 +81,31 @@ mod tests {
         let result_key = repo.get_key(id)?;
 
         assert_eq!(key.secret_key, result_key.secret_key);
+
+        Ok(())
+    }
+
+    #[test]
+    #[ignore]
+    fn stores_and_reads_secret() -> Result<(), error::Error> {
+        let repo = Repo::new();
+
+        let hash = b"Test hash".to_vec();
+
+        let secret = InsertableSecret {
+            key_id: 1,
+            secret: b"Test secret".to_vec(),
+            nonce: b"Test nonce".to_vec(),
+            hash: hash.clone(),
+        };
+
+        let id = repo.store_secret(&secret)?;
+        let result_secret = repo.get_secret(&hash)?;
+
+        assert_eq!(secret.key_id, result_secret.key_id);
+        assert_eq!(secret.secret, result_secret.secret);
+        assert_eq!(secret.hash, result_secret.hash);
+        assert_eq!(secret.nonce, result_secret.nonce);
 
         Ok(())
     }
