@@ -27,9 +27,8 @@ fn get_key() -> Result<secretbox::xsalsa20poly1305::Key, error::Error> {
     // Return the new key
 }
 
-pub fn decrypt_secret(secret: &Secret) -> Result<String, error::Error> {
-    let key = get_key_by_id(secret.key_id)?;
-    let result = secretbox::open(&secret.secret, &secret.get_nonce()?, &key);
+pub fn decrypt_secret(secret: &Secret, secret_key: &SecretKey) -> Result<String, error::Error> {
+    let result = secretbox::open(&secret.secret, &secret.get_nonce()?, &secret_key.get_key()?);
     match result {
         Ok(plaintext_bytes) => Ok(String::from_utf8(plaintext_bytes)?),
         Err(_) => Err(error::Error::SecretboxOpen(error::Msg::new("Failed to open a secretbox"))),

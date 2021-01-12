@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use std::env;
 use diesel::insert_into;
 use dotenv::dotenv;
+use crate::schema::secret_keys::columns::secret_key;
 
 pub struct Repo {
     connection: PgConnection,
@@ -91,18 +92,18 @@ mod tests {
         let repo = Repo::new();
 
         let hash = b"Test hash".to_vec();
+        let key_id = 1;
 
         let secret = InsertableSecret {
-            key_id: 1,
+            key_id,
             secret: b"Test secret".to_vec(),
             nonce: b"Test nonce".to_vec(),
             hash: hash.clone(),
         };
 
-        let id = repo.store_secret(&secret)?;
+        repo.store_secret(&secret)?;
         let result_secret = repo.get_secret(&hash)?;
 
-        assert_eq!(secret.key_id, result_secret.key_id);
         assert_eq!(secret.secret, result_secret.secret);
         assert_eq!(secret.hash, result_secret.hash);
         assert_eq!(secret.nonce, result_secret.nonce);
